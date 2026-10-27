@@ -130,7 +130,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="lg:col-span-7 flex flex-col items-start text-left"
+            className="lg:col-span-7 min-w-0 w-full flex flex-col items-start text-left"
           >
             <div className="inline-flex items-center gap-2 mb-6">
               <span className="text-xs font-bold tracking-widest text-amber-400 uppercase font-outfit px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
@@ -138,7 +138,7 @@ export default function HomePage() {
               </span>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-white font-outfit uppercase leading-none mb-4 break-words drop-shadow-sm">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-black tracking-tighter text-white font-outfit uppercase leading-none mb-4 break-all sm:break-normal max-w-full drop-shadow-md">
               {ARTIST_CONFIG.name}
             </h1>
 

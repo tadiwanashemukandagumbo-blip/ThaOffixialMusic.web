@@ -82,7 +82,7 @@ export const ARTIST_CONFIG = {
   bioShort: "Austin Mtomba, known professionally as LilEthanThaOffixial, is an authentic Afrobeats, RnB, and Trap artist hailing from Zvishavane and Harare, Zimbabwe.",
   bioFull: "Austin Mtomba, known professionally as LilEthanThaOffixial, is an authentic Afrobeats, RnB, and Trap artist hailing from Zvishavane and Harare, Zimbabwe. Releasing under his flagship imprint ThaOffixialMusic, LilEthan has rapidly built an engaged audience across YouTube (@LilEthanThaOffixial), Spotify, Apple Music, and Audiomack with acclaimed drops including 'RUDO' (produced by Loui27s / Law Keyz), 'Hold You' (featuring Arcade X & Stunt Master), 'Emotional Feeling', and 'Wangu Moyo' (featuring Yvng B). Fusing emotive African songwriting with crisp trap rhythms, LilEthan chronicles loyalty, love, ambition, and youth reality in southern Africa. For professional bookings, synchronization, and features, contact artist management Mr Arts (thaoffixialmusic@gmail.com).",
   images: {
-    hero: "/assets/aistudio/Screenshot_2026-10-25_230902_352307e5.png",
+    hero: "/assets/aistudio/WhatsApp_Image_2026-10-28_at_00.48.10_c299ed54.jpeg",
     aboutStudio: "/assets/aistudio/Screenshot_2026-10-25_230722_d2343140.png",
     rudoCover: "/assets/aistudio/Screenshot_2026-10-25_230800_b04248de.png",
     sunsetGoldenHour: "/assets/aistudio/Screenshot_2026-10-25_230822_af17c83e.png",
@@ -246,6 +246,13 @@ export const GALLERY_ITEMS: GalleryItem[] = [
     category: "Portrait",
     image: "/assets/aistudio/Screenshot_2026-10-25_230948_af26f812.png",
     span: "col-span-1 md:col-span-2 row-span-1"
+  },
+  {
+    id: "g5",
+    title: "LilEthanThaOffixial — Official Outdoor Portrait",
+    category: "Portrait",
+    image: "/assets/aistudio/WhatsApp_Image_2026-10-28_at_00.48.10_c299ed54.jpeg",
+    span: "col-span-1 row-span-1"
   }
 ];
 
