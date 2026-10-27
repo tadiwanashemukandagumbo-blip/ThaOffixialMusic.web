@@ -9,11 +9,13 @@ import { ARTIST_CONFIG } from '@/config/artist';
 import { useLanguage, Language } from '@/lib/language-context';
 import { useAuth } from '@/lib/auth-context';
 import BioMegaMenu from '@/components/BioMegaMenu';
+import AdminDashboardModal from '@/components/AdminDashboardModal';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isBioHovered, setIsBioHovered] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const pathname = usePathname();
   const { lang, setLang, cycleLang, t } = useLanguage();
   const { user, isAuthenticated, openAuthModal, logout } = useAuth();
@@ -151,16 +153,27 @@ export default function Navbar() {
           {/* User Auth or Sign In button */}
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 pl-1">
-              <button
-                onClick={() => openAuthModal('signin')}
-                className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/20 transition-colors cursor-pointer"
-                title="Account Profile"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span className="truncate max-w-[130px]">
-                  {user.role === 'admin' ? `${t.nav.admin}: ${user.name}` : `${t.nav.fan}: ${user.name}`}
-                </span>
-              </button>
+              {user.role === 'admin' ? (
+                <button
+                  onClick={() => setIsAdminModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/20 to-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-black flex items-center gap-1.5 hover:scale-105 transition-all shadow-md shadow-amber-500/10 cursor-pointer"
+                  title="Open Administrator Command Center"
+                >
+                  <ShieldCheck className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <span className="truncate max-w-[150px]">ADMIN CONTROL</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => openAuthModal('signin')}
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center gap-1.5 hover:bg-amber-500/20 transition-colors cursor-pointer"
+                  title="Account Profile"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="truncate max-w-[130px]">
+                    {`${t.nav.fan}: ${user.name}`}
+                  </span>
+                </button>
+              )}
               <button
                 onClick={logout}
                 className="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-white/5 transition-colors cursor-pointer"
@@ -300,6 +313,12 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Admin Command Center Dashboard Modal */}
+      <AdminDashboardModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+      />
     </header>
   );
 }
