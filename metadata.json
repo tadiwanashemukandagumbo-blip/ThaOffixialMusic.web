@@ -1,0 +1,6 @@
+{
+  "name": "LilEthanThaOffixial — Official Website",
+  "description": "Experience the sound, stories, and vision of LilEthanThaOffixial. Afrobeats, R&B, Trap, and Afro-fusion from Zimbabwe to the world.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
