@@ -269,22 +269,45 @@ export default function HomePage() {
         className="py-8 bg-[#0A0A0C]/80 backdrop-blur-sm border-y border-white/10"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 p-6 bg-black/40 rounded-2xl border border-white/5 text-center">
-            <div className="p-2">
-              <span className="block text-3xl sm:text-4xl font-black text-white font-outfit">{t.stats.youtubeViews}</span>
-              <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">{t.stats.youtubeViewsLabel}</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 p-3 sm:p-5 bg-black/50 rounded-3xl border border-white/5">
+            {/* Stat 1: YouTube Views */}
+            <div className="col-span-1 p-4 sm:p-5 bg-zinc-900/60 rounded-2xl border border-white/5 text-center flex flex-col justify-center items-center min-w-0 overflow-hidden hover:border-amber-500/30 transition-colors">
+              <span className="block text-2xl xs:text-3xl sm:text-4xl font-black text-white font-outfit tracking-tight truncate max-w-full">
+                {t.stats.youtubeViews}
+              </span>
+              <span className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
+                {t.stats.youtubeViewsLabel}
+              </span>
             </div>
-            <div className="p-2">
-              <span className="block text-3xl sm:text-4xl font-black text-white font-outfit">{t.stats.spotifyListeners}</span>
-              <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">{t.stats.spotifyListenersLabel}</span>
+
+            {/* Stat 2: Spotify Listeners */}
+            <div className="col-span-1 p-4 sm:p-5 bg-zinc-900/60 rounded-2xl border border-white/5 text-center flex flex-col justify-center items-center min-w-0 overflow-hidden hover:border-emerald-500/30 transition-colors">
+              <span className="block text-2xl xs:text-3xl sm:text-4xl font-black text-white font-outfit tracking-tight truncate max-w-full">
+                {t.stats.spotifyListeners}
+              </span>
+              <span className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
+                {t.stats.spotifyListenersLabel}
+              </span>
             </div>
-            <div className="p-2">
-              <span className="block text-3xl sm:text-4xl font-black text-white font-outfit">{t.stats.youtubeHandle}</span>
-              <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">{t.stats.youtubeHandleLabel}</span>
+
+            {/* Stat 3: YouTube Channel Handle - col-span-2 on mobile so it has full width, sm:col-span-1 on tablet & desktop */}
+            <div className="col-span-2 sm:col-span-1 p-4 sm:p-5 bg-zinc-900/60 rounded-2xl border border-white/5 text-center flex flex-col justify-center items-center min-w-0 overflow-hidden hover:border-red-500/30 transition-colors">
+              <span className="block text-base xs:text-lg sm:text-xl lg:text-xl xl:text-2xl font-black text-amber-400 font-outfit tracking-tight truncate max-w-full">
+                {t.stats.youtubeHandle}
+              </span>
+              <span className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
+                {t.stats.youtubeHandleLabel}
+              </span>
             </div>
-            <div className="p-2">
-              <span className="block text-3xl sm:text-4xl font-black text-white font-outfit">{t.stats.hometown}</span>
-              <span className="text-xs text-zinc-400 uppercase tracking-wider font-medium">{t.stats.hometownLabel}</span>
+
+            {/* Stat 4: Origin / Roots - col-span-2 on mobile so it has full width, sm:col-span-1 on tablet & desktop */}
+            <div className="col-span-2 sm:col-span-1 p-4 sm:p-5 bg-zinc-900/60 rounded-2xl border border-white/5 text-center flex flex-col justify-center items-center min-w-0 overflow-hidden hover:border-amber-500/30 transition-colors">
+              <span className="block text-base xs:text-lg sm:text-xl lg:text-xl xl:text-2xl font-black text-white font-outfit tracking-tight truncate max-w-full">
+                {t.stats.hometown}
+              </span>
+              <span className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
+                {t.stats.hometownLabel}
+              </span>
             </div>
           </div>
         </div>

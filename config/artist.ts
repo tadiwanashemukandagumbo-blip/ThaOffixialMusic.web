@@ -1,13 +1,24 @@
 export interface Track {
   id: string;
   title: string;
+  artist: string;
   featured: string;
   genre: string;
   releaseDate: string;
+  releaseYear?: string;
   duration: string;
-  streams: string;
+  streams?: string;
   coverImage: string;
+  coverArt?: string;
   previewUrl?: string;
+  bpm?: number;
+  key?: string;
+  audioUrl?: string;
+  spotifyUrl?: string;
+  appleMusicUrl?: string;
+  audiomackUrl?: string;
+  youtubeUrl?: string;
+  isNew?: boolean;
   links: {
     spotify: string;
     appleMusic: string;
@@ -109,6 +120,7 @@ export const TRACKS: Track[] = [
   {
     id: "rudo",
     title: "Rudo",
+    artist: "LilEthanThaOffixial",
     featured: "Loui27s / Law Keyz de mentor",
     genre: "Afro-fusion Single",
     releaseDate: "2026",
@@ -126,6 +138,7 @@ export const TRACKS: Track[] = [
   {
     id: "hold-you",
     title: "Hold You",
+    artist: "LilEthanThaOffixial",
     featured: "Arcade X & Stunt Master",
     genre: "R&B / Afrobeats",
     releaseDate: "2026",
@@ -143,6 +156,7 @@ export const TRACKS: Track[] = [
   {
     id: "kumbofara",
     title: "Kumbofara",
+    artist: "LilEthanThaOffixial",
     featured: "CB3zw & Stunt Master",
     genre: "Afro-Trap Hit",
     releaseDate: "2025",
@@ -160,6 +174,7 @@ export const TRACKS: Track[] = [
   {
     id: "emotional-feeling",
     title: "Emotional_Feeling",
+    artist: "LilEthanThaOffixial",
     featured: "Solo",
     genre: "Melodic R&B",
     releaseDate: "2025",
@@ -177,6 +192,7 @@ export const TRACKS: Track[] = [
   {
     id: "wangu-moyo",
     title: "Wangu Moyo",
+    artist: "LilEthanThaOffixial",
     featured: "Yvng B",
     genre: "Soulful Afrobeats",
     releaseDate: "2026",

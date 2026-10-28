@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   X,
   Mail,
@@ -17,6 +18,9 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
+  Key,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { ARTIST_CONFIG } from '@/config/artist';
 import { useAuth } from '@/lib/auth-context';
@@ -35,20 +39,38 @@ export default function AuthModal() {
   } = useAuth();
 
   const { t } = useLanguage();
+  const router = useRouter();
 
   const [selectedTab, setSelectedTab] = useState<'signin' | 'signup' | null>(null);
   const tab = selectedTab ?? authTab ?? 'signin';
 
-  // Do NOT automatically fill administrator email and password when signing in
+  // Credentials and profile fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
+  const [isAdminSignInMode, setIsAdminSignInMode] = useState(false);
+  const [accountRole, setAccountRole] = useState<'fan' | 'admin'>('fan');
+  const [adminPasscode, setAdminPasscode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showAdminPasscode, setShowAdminPasscode] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
+
+  // Transfer state when user enters credentials on signin without an existing account
+  const [transferNotice, setTransferNotice] = useState<{
+    fromEmail: string;
+    message: string;
+    isAdmin: boolean;
+  } | null>(null);
+  const [highlightBlanks, setHighlightBlanks] = useState(false);
+
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const adminPasscodeRef = useRef<HTMLInputElement>(null);
+
+
 
   if (!isAuthModalOpen) return null;
 
@@ -75,18 +97,63 @@ export default function AuthModal() {
 
       if (res.success) {
         setSuccess(true);
+        const isAdmin = res.role === 'admin' || accountRole === 'admin' || email.trim().toLowerCase() === 'thaoffixialmusic@gmail.com';
         setTimeout(() => {
           setSuccess(false);
           closeAuthModal();
           setEmail('');
           setPassword('');
-        }, 1200);
+          setTransferNotice(null);
+          setHighlightBlanks(false);
+          if (isAdmin) {
+            router.push('/admin');
+          }
+        }, 1000);
+      } else if (res.notFound) {
+        // User entered credentials on sign in page without an existing account:
+        // Move the information to create account and prompt for blank/empty fields!
+        const normalized = email.trim().toLowerCase();
+        const isAdmin = isAdminSignInMode || normalized === 'thaoffixialmusic@gmail.com' || normalized === 'tadiwanashemukandagumbo@gmail.com';
+        
+        if (isAdmin) {
+          setAccountRole('admin');
+        } else {
+          setAccountRole('fan');
+        }
+
+        setSelectedTab('signup');
+        setHighlightBlanks(true);
+        setTransferNotice({
+          fromEmail: email.trim(),
+          isAdmin,
+          message: isAdmin
+            ? `No administrator account was found for "${email.trim()}". We have transferred your email and password over to account creation. Please enter your Full Name and Administrator Passcode in the highlighted blank field(s) below.`
+            : `No account was found for "${email.trim()}". We have transferred your email and password over to account creation. Please enter your Full Name in the highlighted blank field(s) below to complete registration.`,
+        });
+
+        // Auto-focus the first blank field
+        setTimeout(() => {
+          nameInputRef.current?.focus();
+        }, 150);
       } else {
         setErrorMsg(res.error || 'Login failed. Please check credentials.');
       }
     } else {
-      if (!name.trim() || !email.trim() || !password) {
-        setErrorMsg('Please complete all fields to create your fan account.');
+      // Sign up / Create Account mode
+      if (!name.trim()) {
+        setErrorMsg('Please enter your Full Name in the highlighted field.');
+        setHighlightBlanks(true);
+        nameInputRef.current?.focus();
+        return;
+      }
+
+      if (!email.trim()) {
+        setErrorMsg('Please enter a valid email address.');
+        return;
+      }
+
+      if (!password) {
+        setErrorMsg('Please provide a password.');
         return;
       }
 
@@ -95,12 +162,25 @@ export default function AuthModal() {
         return;
       }
 
+      // Administrator role validation
+      if (accountRole === 'admin') {
+        const normalized = email.trim().toLowerCase();
+        const isOfficialAdminEmail = normalized === 'thaoffixialmusic@gmail.com' || normalized === 'tadiwanashemukandagumbo@gmail.com';
+        if (!isOfficialAdminEmail && adminPasscode.trim() !== 'Deminoh19o5') {
+          setErrorMsg('Invalid Administrator Passcode. Please enter Deminoh19o5 to authorize administrator account creation.');
+          setHighlightBlanks(true);
+          adminPasscodeRef.current?.focus();
+          return;
+        }
+      }
+
       setIsSubmitting(true);
-      const res = signup(name.trim(), email.trim(), city.trim() || 'Harare, Zimbabwe', password);
+      const res = signup(name.trim(), email.trim(), city.trim() || 'Harare, Zimbabwe', password, accountRole);
       setIsSubmitting(false);
 
       if (res.success) {
         setSuccess(true);
+        const isAdmin = accountRole === 'admin' || email.trim().toLowerCase() === 'thaoffixialmusic@gmail.com';
         setTimeout(() => {
           setSuccess(false);
           closeAuthModal();
@@ -108,25 +188,31 @@ export default function AuthModal() {
           setEmail('');
           setPassword('');
           setCity('');
-        }, 1200);
+          setAdminPasscode('');
+          setTransferNotice(null);
+          setHighlightBlanks(false);
+          if (isAdmin) {
+            router.push('/admin');
+          }
+        }, 1000);
       } else {
-        setErrorMsg(res.error || 'Failed to create fan account.');
+        setErrorMsg(res.error || 'Failed to create account.');
       }
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
-      <div className="relative w-full max-w-[480px] my-auto bg-[#0C0C0E] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-left overflow-hidden">
+      <div className="relative w-full max-w-[500px] my-auto bg-[#0C0C0E] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl text-left overflow-hidden">
         {/* Top Kicker and Close Button */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold uppercase tracking-widest font-mono mb-2">
               <Sparkles className="w-4 h-4 fill-amber-400" />
-              <span>{t.auth.fanPortal}</span>
+              <span>{accountRole === 'admin' || isAdminSignInMode ? 'Administrator Command Portal' : t.auth.fanPortal}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-white font-outfit uppercase tracking-tight leading-tight">
-              {t.auth.welcomeHub}
+              {accountRole === 'admin' || isAdminSignInMode ? 'Admin Access' : t.auth.welcomeHub}
             </h2>
           </div>
           <button
@@ -140,13 +226,15 @@ export default function AuthModal() {
 
         {/* Subtitle */}
         <p className="text-xs sm:text-sm text-zinc-400 mt-2 leading-relaxed">
-          {t.auth.welcomeSub}
+          {accountRole === 'admin' || isAdminSignInMode
+            ? 'Sign in or register for verified administrator management tools, live analytics, threat logs, and music catalog publishing.'
+            : t.auth.welcomeSub}
         </p>
 
         {/* Divider */}
         <div className="border-t border-white/10 my-5" />
 
-        {/* Tab Switcher - Strictly Sign In and Single Fan Account Creation Option */}
+        {/* Tab Switcher - Sign In vs Create Account */}
         <div className="grid grid-cols-2 p-1.5 bg-[#151518] rounded-2xl border border-white/5 mb-5">
           <button
             type="button"
@@ -178,6 +266,34 @@ export default function AuthModal() {
           </button>
         </div>
 
+        {/* TRANSFERRED NOTICE BANNER: When credentials were moved from Sign In to Create Account */}
+        {tab === 'signup' && transferNotice && (
+          <div className="mb-5 p-4 rounded-2xl bg-amber-500/10 border-2 border-amber-500/50 text-left animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg shadow-amber-500/10">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+                <ArrowRight className="w-5 h-5 animate-pulse" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-400 font-mono">
+                    Information Transferred
+                  </h4>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    Auto-Moved
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-200 mt-1.5 leading-relaxed font-medium">
+                  {transferNotice.message}
+                </p>
+                <div className="mt-2.5 flex items-center gap-2 text-[11px] text-amber-300 font-mono bg-black/40 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                  <Info className="w-3.5 h-3.5 shrink-0" />
+                  <span>Email and password are preserved. Fill blank fields below.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 5 FAILED ATTEMPTS SECURITY LOCKOUT & 10S COUNTDOWN BANNER */}
         {securityAlert && (
           <div className="mb-5 p-4 rounded-2xl bg-red-950/40 border border-red-500/40 text-left animate-in fade-in duration-300">
@@ -198,7 +314,7 @@ export default function AuthModal() {
                   {t.auth.securityAlertBody}
                 </p>
 
-                {/* 10-Second Real-Time Countdown */}
+                {/* 10-Second Countdown */}
                 {isLocked ? (
                   <div className="mt-3 p-3 rounded-xl bg-black/60 border border-red-500/30">
                     <div className="flex items-center justify-between text-xs mb-1.5 font-mono">
@@ -210,7 +326,6 @@ export default function AuthModal() {
                         00:{lockoutSeconds.toString().padStart(2, '0')}s
                       </span>
                     </div>
-                    {/* Progress Bar */}
                     <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-amber-400 transition-all duration-1000 ease-linear"
@@ -248,7 +363,6 @@ export default function AuthModal() {
                   </button>
                 </div>
 
-                {/* Dispatched Email Accordion */}
                 {showEmailPreview && (
                   <div className="mt-3 p-3 bg-black/80 rounded-xl border border-white/10 text-[11px] font-mono text-zinc-300 space-y-1">
                     <div className="text-zinc-500 text-[10px]">-- OUTGOING SECURITY ALERT EMAIL --</div>
@@ -264,7 +378,7 @@ export default function AuthModal() {
           </div>
         )}
 
-        {/* Regular Attempt Error Message (When < 5 attempts) */}
+        {/* Regular Attempt Error Message */}
         {errorMsg && !securityAlert && (
           <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0 text-red-400" />
@@ -288,28 +402,79 @@ export default function AuthModal() {
               {tab === 'signin' ? t.auth.welcomeBack : t.auth.accountCreated}
             </h3>
             <p className="text-xs text-zinc-400 max-w-xs">
-              {t.auth.signedInMsg}
+              {accountRole === 'admin'
+                ? 'Welcome Administrator. Accessing Administrator Control Center...'
+                : t.auth.signedInMsg}
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Create Account Fields */}
             {tab === 'signup' && (
               <>
+                {/* Account Type Selector (Fan vs Administrator) */}
+                <div className="p-3 bg-zinc-900/60 rounded-xl border border-white/10">
+                  <label className="text-xs font-semibold text-zinc-300 block mb-2">Account Role</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAccountRole('fan')}
+                      className={`p-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        accountRole === 'fan'
+                          ? 'bg-amber-500 text-black shadow-sm'
+                          : 'bg-black/40 text-zinc-400 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      <span>Fan Community</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAccountRole('admin')}
+                      className={`p-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        accountRole === 'admin'
+                          ? 'bg-amber-500 text-black shadow-sm'
+                          : 'bg-black/40 text-zinc-400 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>Administrator</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Blank Field Prompt: Full Name */}
                 <div>
-                  <label className="text-xs font-semibold text-zinc-300 block mb-1.5">{t.auth.fullName}</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-zinc-300">{t.auth.fullName}</label>
+                    {highlightBlanks && !name.trim() && (
+                      <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40 animate-pulse flex items-center gap-1">
+                        <span>● Required: Enter Full Name</span>
+                      </span>
+                    )}
+                  </div>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                     <input
+                      ref={nameInputRef}
                       type="text"
                       required
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Your Full Name"
-                      className="w-full bg-[#141417] border border-white/10 rounded-xl px-4 py-3.5 pl-11 text-white text-xs sm:text-sm placeholder-zinc-600 focus:outline-none focus:border-amber-400 transition-colors"
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      placeholder="e.g. Austin Mtomba / Your Name"
+                      className={`w-full rounded-xl px-4 py-3.5 pl-11 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none transition-all ${
+                        highlightBlanks && !name.trim()
+                          ? 'bg-[#1e1708] border-2 border-amber-400 ring-4 ring-amber-400/25 shadow-lg shadow-amber-500/10'
+                          : 'bg-[#141417] border border-white/10 focus:border-amber-400'
+                      }`}
                     />
                   </div>
                 </div>
 
+                {/* City / Country */}
                 <div>
                   <label className="text-xs font-semibold text-zinc-300 block mb-1.5">{t.auth.cityCountry}</label>
                   <div className="relative">
@@ -318,16 +483,67 @@ export default function AuthModal() {
                       type="text"
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="Harare, Zimbabwe"
+                      placeholder="Harare & Zvishavane, Zimbabwe"
                       className="w-full bg-[#141417] border border-white/10 rounded-xl px-4 py-3.5 pl-11 text-white text-xs sm:text-sm placeholder-zinc-600 focus:outline-none focus:border-amber-400 transition-colors"
                     />
                   </div>
                 </div>
+
+                {/* Administrator Passcode Prompt (when Administrator role selected) */}
+                {accountRole === 'admin' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-zinc-300 flex items-center gap-1">
+                        <Key className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Administrator Passcode</span>
+                      </label>
+                      {highlightBlanks && !adminPasscode.trim() && (
+                        <span className="text-[10px] font-black uppercase text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40 animate-pulse">
+                          ● Passcode: Deminoh19o5
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                      <input
+                        ref={adminPasscodeRef}
+                        type={showAdminPasscode ? 'text' : 'password'}
+                        value={adminPasscode}
+                        onChange={(e) => setAdminPasscode(e.target.value)}
+                        placeholder="Enter Deminoh19o5"
+                        className={`w-full rounded-xl px-4 py-3.5 pl-11 pr-11 text-white text-xs sm:text-sm placeholder-zinc-500 focus:outline-none transition-all ${
+                          highlightBlanks && !adminPasscode.trim()
+                            ? 'bg-[#1e1708] border-2 border-amber-400 ring-4 ring-amber-400/25'
+                            : 'bg-[#141417] border border-white/10 focus:border-amber-400'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowAdminPasscode(!showAdminPasscode)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                      >
+                        {showAdminPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-zinc-500 mt-1">
+                      Official ThaOffixialMusic team key is <span className="text-amber-400 font-mono font-bold">Deminoh19o5</span>.
+                    </p>
+                  </div>
+                )}
               </>
             )}
 
+            {/* Email Address Field */}
             <div>
-              <label className="text-xs font-semibold text-zinc-300 block mb-1.5">{t.auth.emailAddress}</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-zinc-300">{t.auth.emailAddress}</label>
+                {tab === 'signup' && transferNotice && (
+                  <span className="text-[10px] font-bold uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Transferred
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                 <input
@@ -341,9 +557,17 @@ export default function AuthModal() {
               </div>
             </div>
 
+            {/* Password Field */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-zinc-300">{t.auth.password}</label>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-semibold text-zinc-300">{t.auth.password}</label>
+                  {tab === 'signup' && transferNotice && (
+                    <span className="text-[10px] font-bold uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Transferred
+                    </span>
+                  )}
+                </div>
                 {tab === 'signin' && (
                   <Link
                     href={`/reset-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
@@ -381,6 +605,28 @@ export default function AuthModal() {
               </div>
             </div>
 
+            {/* Administrator Sign-In Mode Toggle on Sign In Tab */}
+            {tab === 'signin' && (
+              <div className="pt-1 p-3 bg-zinc-900/40 rounded-xl border border-white/5 flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-zinc-300 hover:text-white select-none">
+                  <input
+                    type="checkbox"
+                    checked={isAdminSignInMode}
+                    onChange={(e) => {
+                      setIsAdminSignInMode(e.target.checked);
+                      if (e.target.checked) setAccountRole('admin');
+                    }}
+                    className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500/20 w-4 h-4 accent-amber-500 cursor-pointer"
+                  />
+                  <span className="font-medium flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Sign in as Administrator (Management Team)</span>
+                  </span>
+                </label>
+              </div>
+            )}
+
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting || isLocked}
@@ -396,7 +642,11 @@ export default function AuthModal() {
                   : isSubmitting
                   ? t.auth.verifying
                   : tab === 'signin'
-                  ? t.auth.signInBtn
+                  ? isAdminSignInMode
+                    ? 'Sign In As Administrator'
+                    : t.auth.signInBtn
+                  : accountRole === 'admin'
+                  ? 'Create Administrator Account'
                   : t.auth.createFanBtn}
               </span>
               <ArrowRight className="w-4 h-4" />

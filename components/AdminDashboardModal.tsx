@@ -111,6 +111,7 @@ export default function AdminDashboardModal({
       const newTrack: Track = {
         id: `t_dyn_${Date.now()}`,
         title: customTitle.trim() || parsedData.title,
+        artist: 'LilEthanThaOffixial',
         featured: customFeatured.trim() || 'ThaOffixialMusic',
         genre: customGenre.trim() || 'Afrobeats / RnB',
         releaseDate: '2026',

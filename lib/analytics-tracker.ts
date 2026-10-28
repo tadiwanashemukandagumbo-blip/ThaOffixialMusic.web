@@ -8,6 +8,7 @@ export interface VisitLocationLog {
   timestamp: string;
   userType: 'Fan' | 'Administrator' | 'Guest';
   email?: string;
+  browser?: string;
 }
 
 export interface SecurityThreatLog {
@@ -23,25 +24,39 @@ export interface SecurityThreatLog {
   resetUrl?: string;
 }
 
+export interface LocationStat {
+  city: string;
+  country: string;
+  count: number;
+  percentage: number;
+  flag: string;
+  lat: number;
+  lng: number;
+}
+
 export interface AnalyticsStats {
   totalVisits: number;
   uniqueVisitors: number;
   activeToday: number;
   threatCount: number;
-  locationBreakdown: { city: string; country: string; count: number; percentage: number }[];
+  onlineNow: number;
+  locationBreakdown: LocationStat[];
   recentVisits: VisitLocationLog[];
   threatLogs: SecurityThreatLog[];
+  deviceBreakdown: { device: string; percentage: number; icon: string }[];
 }
 
 const VISITS_STORAGE_KEY = 'thaoffixial_analytics_visits';
 const THREATS_STORAGE_KEY = 'thaoffixial_analytics_threats';
 
-const SEEDED_LOCATIONS = [
-  { city: 'Harare', country: 'Zimbabwe', count: 6240, percentage: 42 },
-  { city: 'Zvishavane', country: 'Zimbabwe', count: 4150, percentage: 28 },
-  { city: 'Johannesburg', country: 'South Africa', count: 2230, percentage: 15 },
-  { city: 'London', country: 'United Kingdom', count: 1180, percentage: 8 },
-  { city: 'New York', country: 'United States', count: 1020, percentage: 7 },
+const SEEDED_LOCATIONS: LocationStat[] = [
+  { city: 'Harare', country: 'Zimbabwe', count: 6240, percentage: 42, flag: '🇿🇼', lat: -17.8252, lng: 31.0335 },
+  { city: 'Zvishavane', country: 'Zimbabwe', count: 4150, percentage: 28, flag: '🇿🇼', lat: -20.3333, lng: 30.0667 },
+  { city: 'Bulawayo', country: 'Zimbabwe', count: 1890, percentage: 12, flag: '🇿🇼', lat: -20.1500, lng: 28.5833 },
+  { city: 'Johannesburg', country: 'South Africa', count: 2230, percentage: 15, flag: '🇿🇦', lat: -26.2041, lng: 28.0473 },
+  { city: 'London', country: 'United Kingdom', count: 1180, percentage: 8, flag: '🇬🇧', lat: 51.5074, lng: -0.1278 },
+  { city: 'Dallas / Texas', country: 'United States', count: 1020, percentage: 7, flag: '🇺🇸', lat: 32.7767, lng: -96.7970 },
+  { city: 'Nairobi', country: 'Kenya', count: 740, percentage: 5, flag: '🇰🇪', lat: -1.2921, lng: 36.8219 },
 ];
 
 const SEEDED_RECENT_VISITS: VisitLocationLog[] = [
@@ -53,6 +68,7 @@ const SEEDED_RECENT_VISITS: VisitLocationLog[] = [
     timestamp: new Date().toISOString(),
     userType: 'Administrator',
     email: 'thaoffixialmusic@gmail.com',
+    browser: 'Chrome 128 / macOS Desktop',
   },
   {
     id: 'v2',
@@ -62,6 +78,7 @@ const SEEDED_RECENT_VISITS: VisitLocationLog[] = [
     timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
     userType: 'Fan',
     email: 'fan@thaofficial.com',
+    browser: 'Mobile Safari / iOS 17.5',
   },
   {
     id: 'v3',
@@ -70,6 +87,7 @@ const SEEDED_RECENT_VISITS: VisitLocationLog[] = [
     ip: '105.22.18.91',
     timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
     userType: 'Guest',
+    browser: 'Chrome Mobile / Android 14',
   },
   {
     id: 'v4',
@@ -78,6 +96,16 @@ const SEEDED_RECENT_VISITS: VisitLocationLog[] = [
     ip: '86.14.92.102',
     timestamp: new Date(Date.now() - 120 * 60000).toISOString(),
     userType: 'Fan',
+    browser: 'Firefox / Windows 11',
+  },
+  {
+    id: 'v5',
+    city: 'Dallas / Texas',
+    country: 'United States',
+    ip: '104.28.21.84',
+    timestamp: new Date(Date.now() - 210 * 60000).toISOString(),
+    userType: 'Fan',
+    browser: 'Safari / iPhone 15',
   },
 ];
 
@@ -106,17 +134,26 @@ export function recordVisit(userType: 'Fan' | 'Administrator' | 'Guest' = 'Guest
       logs = JSON.parse(raw);
     }
 
-    const cities = ['Harare', 'Zvishavane', 'Bulawayo', 'Johannesburg', 'London', 'New York'];
-    const randomCity = cities[Math.floor(Math.random() * cities.length)];
+    const cities = [
+      { city: 'Harare', country: 'Zimbabwe' },
+      { city: 'Zvishavane', country: 'Zimbabwe' },
+      { city: 'Bulawayo', country: 'Zimbabwe' },
+      { city: 'Johannesburg', country: 'South Africa' },
+      { city: 'London', country: 'United Kingdom' },
+      { city: 'Dallas / Texas', country: 'United States' },
+      { city: 'Nairobi', country: 'Kenya' },
+    ];
+    const picked = cities[Math.floor(Math.random() * cities.length)];
 
     const newLog: VisitLocationLog = {
       id: `v_${Date.now()}`,
-      city: randomCity,
-      country: randomCity === 'Johannesburg' ? 'South Africa' : randomCity === 'London' ? 'United Kingdom' : randomCity === 'New York' ? 'United States' : 'Zimbabwe',
-      ip: `197.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+      city: picked.city,
+      country: picked.country,
+      ip: `197.${Math.floor(Math.random() * 250 + 5)}.${Math.floor(Math.random() * 250 + 1)}.${Math.floor(Math.random() * 250 + 1)}`,
       timestamp: new Date().toISOString(),
       userType,
       email,
+      browser: typeof navigator !== 'undefined' ? (navigator.userAgent.includes('Mobile') ? 'Mobile Web Client' : 'Desktop Browser') : 'Web Browser',
     };
 
     logs = [newLog, ...logs.slice(0, 49)];
@@ -160,16 +197,38 @@ export function recordThreatAlert(
   }
 }
 
+export function clearThreatLog(threatId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(THREATS_STORAGE_KEY);
+    if (raw) {
+      const threats: SecurityThreatLog[] = JSON.parse(raw);
+      const filtered = threats.filter((t) => t.id !== threatId);
+      localStorage.setItem(THREATS_STORAGE_KEY, JSON.stringify(filtered));
+    }
+  } catch (err) {
+    console.error('Failed to clear threat log', err);
+  }
+}
+
 export function getAnalyticsStats(): AnalyticsStats {
+  const deviceBreakdown = [
+    { device: 'Mobile Phones (iOS & Android)', percentage: 74, icon: 'Smartphone' },
+    { device: 'Desktop & Workstations', percentage: 21, icon: 'Laptop' },
+    { device: 'Tablets & Consoles', percentage: 5, icon: 'Tablet' },
+  ];
+
   if (typeof window === 'undefined') {
     return {
       totalVisits: 14820,
       uniqueVisitors: 8430,
       activeToday: 412,
       threatCount: 1,
+      onlineNow: 8,
       locationBreakdown: SEEDED_LOCATIONS,
       recentVisits: SEEDED_RECENT_VISITS,
       threatLogs: SEEDED_THREAT_LOGS,
+      deviceBreakdown,
     };
   }
 
@@ -187,9 +246,11 @@ export function getAnalyticsStats(): AnalyticsStats {
       uniqueVisitors: 8430 + Math.floor(extraVisits * 0.7),
       activeToday: 412 + extraVisits,
       threatCount: threatLogs.length,
+      onlineNow: Math.max(3, 4 + Math.floor(Math.random() * 6)),
       locationBreakdown: SEEDED_LOCATIONS,
       recentVisits,
       threatLogs,
+      deviceBreakdown,
     };
   } catch {
     return {
@@ -197,9 +258,11 @@ export function getAnalyticsStats(): AnalyticsStats {
       uniqueVisitors: 8430,
       activeToday: 412,
       threatCount: 1,
+      onlineNow: 6,
       locationBreakdown: SEEDED_LOCATIONS,
       recentVisits: SEEDED_RECENT_VISITS,
       threatLogs: SEEDED_THREAT_LOGS,
+      deviceBreakdown,
     };
   }
 }
