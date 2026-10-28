@@ -22,6 +22,7 @@ import {
   MapPin,
   Radio
 } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
 import { getAnalyticsStats, AnalyticsStats, recordVisit } from '@/lib/analytics-tracker';
 import {
   parseUrlMetadata,
@@ -46,7 +47,8 @@ export default function AdminDashboardModal({
   onClose,
   onContentUpdated,
 }: AdminDashboardModalProps) {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'security' | 'ingester' | 'dsp'>('analytics');
+  const { getAllAccounts, getActiveSessions, updateUserCredentials, deleteUserAccount, terminateSession } = useAuth();
+  const [activeTab, setActiveTab] = useState<'analytics' | 'security' | 'ingester' | 'dsp' | 'users'>('analytics');
   const [stats, setStats] = useState<AnalyticsStats>(getAnalyticsStats());
   
   // URL Ingesting state
@@ -256,6 +258,17 @@ export default function AdminDashboardModal({
             >
               <Radio className="w-4 h-4" />
               DSP Sync &amp; Catalog
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`pb-3 px-4 border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+                activeTab === 'users'
+                  ? 'border-amber-400 text-amber-400'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              User Management
             </button>
           </div>
 
@@ -712,6 +725,59 @@ export default function AdminDashboardModal({
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'users' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Account Management */}
+                  <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                      <Users className="w-4 h-4 text-amber-400" />
+                      All Registered Accounts
+                    </h3>
+                    <div className="space-y-3">
+                      {getAllAccounts().map((acc) => (
+                        <div key={acc.email} className="p-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-bold text-white">{acc.name}</p>
+                            <p className="text-[10px] text-zinc-400">{acc.email}</p>
+                          </div>
+                          <button
+                            onClick={() => deleteUserAccount(acc.email)}
+                            className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Active Sessions */}
+                  <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
+                    <h3 className="text-sm font-bold text-white font-outfit flex items-center gap-2">
+                      <Radio className="w-4 h-4 text-emerald-400" />
+                      Live Active Sessions
+                    </h3>
+                    <div className="space-y-3">
+                      {getActiveSessions().map((sess) => (
+                        <div key={sess.id} className="p-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-bold text-emerald-400">{sess.name}</p>
+                            <p className="text-[10px] text-zinc-400">{sess.device} · {sess.city}</p>
+                          </div>
+                          <button
+                            onClick={() => terminateSession(sess.id)}
+                            className="p-2 rounded-lg bg-zinc-800 text-zinc-400 hover:text-white"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

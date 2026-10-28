@@ -292,20 +292,20 @@ export default function HomePage() {
 
             {/* Stat 3: YouTube Channel Handle - col-span-2 on mobile so it has full width, sm:col-span-1 on tablet & desktop */}
             <div className="col-span-2 sm:col-span-1 p-4 sm:p-5 bg-zinc-900/60 rounded-2xl border border-white/5 text-center flex flex-col justify-center items-center min-w-0 overflow-hidden hover:border-red-500/30 transition-colors">
-              <span className="block text-base xs:text-lg sm:text-xl lg:text-xl xl:text-2xl font-black text-amber-400 font-outfit tracking-tight truncate max-w-full">
+              <span className="block text-sm xs:text-base sm:text-xl lg:text-xl xl:text-2xl font-black text-amber-400 font-outfit tracking-tight truncate max-w-full">
                 {t.stats.youtubeHandle}
               </span>
-              <span className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
+              <span className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
                 {t.stats.youtubeHandleLabel}
               </span>
             </div>
 
             {/* Stat 4: Origin / Roots - col-span-2 on mobile so it has full width, sm:col-span-1 on tablet & desktop */}
             <div className="col-span-2 sm:col-span-1 p-4 sm:p-5 bg-zinc-900/60 rounded-2xl border border-white/5 text-center flex flex-col justify-center items-center min-w-0 overflow-hidden hover:border-amber-500/30 transition-colors">
-              <span className="block text-base xs:text-lg sm:text-xl lg:text-xl xl:text-2xl font-black text-white font-outfit tracking-tight truncate max-w-full">
+              <span className="block text-sm xs:text-base sm:text-xl lg:text-xl xl:text-2xl font-black text-white font-outfit tracking-tight truncate max-w-full">
                 {t.stats.hometown}
               </span>
-              <span className="text-[11px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
+              <span className="text-[10px] sm:text-xs text-zinc-400 uppercase tracking-wider font-medium mt-1 line-clamp-1">
                 {t.stats.hometownLabel}
               </span>
             </div>
